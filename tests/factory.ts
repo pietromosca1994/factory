@@ -4,6 +4,7 @@ import { Factory } from "../target/types/factory";
 import { PublicKey, Keypair, LAMPORTS_PER_SOL, Connection} from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress} from "@solana/spl-token";
 import { assert } from "chai";
+import { token } from "@coral-xyz/anchor/dist/cjs/utils";
 
 describe("factory", () => {
   // Configure the client to use the local cluster.
@@ -18,21 +19,54 @@ describe("factory", () => {
 
   // Create keypairs for the payer and mint accounts
   const payer = provider;
-  const mint = Keypair.generate();
 
-  it("Create an asset", async () => {
+  const id = generateRandomString(10)
+  
+  const [tokenRegistryPDA, tokenRegistryBump] = web3.PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('token_registry'),
+    ],
+    program.programId
+  )
 
-    await checkAccounts(provider.connection);
+
+  it("Initializes the program", async () => {
+
+    // derive the tokenRegistry account
+    const [tokenRegistryPDA, tokenRegistryBump] = web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('token_registry'),
+      ],
+      program.programId
+    )
+
+    // invoke the init method
+    await program.methods
+    .init() // Call the function with the InitTokenParams struct
+    .accounts({
+        tokenRegistry: tokenRegistryPDA
+    })
+    .rpc();
+
+    // check that the token registry account has been created
+    const accountInfo = await provider.connection.getAccountInfo(tokenRegistryPDA);
+    assert(accountInfo.owner.equals(program.programId), `token_registry account owner: ${accountInfo.owner}\n program id: ${program.programId}`);
+  });
+
+  it("Creates an NFT", async () => {
+
+    // await checkAccounts(provider.connection);
 
     // Airdrop SOL to payer for testing
     // const airdropSignature = await provider.connection.requestAirdrop(payer.publicKey, 5e9);
     // await provider.connection.confirmTransaction(airdropSignature, "confirmed");
     // const balance = await provider.connection.getAccountInfo(payer.publicKey)
     // console.log(`Balance for ${payer.publicKey}: ${balance.lamports/LAMPORTS_PER_SOL}`)
+    const mint = Keypair.generate();
 
     // Create the InitTokenParams struct
-      const token_params = {
-        id: '1234',
+    const token_params = {
+        id: id,
         uri: "https://example.com/metadata.json", // Replace with your metadata URI
     };
 
@@ -76,19 +110,16 @@ describe("factory", () => {
     console.log(`provider account:              ${provider.publicKey}`)
     console.log(`payer account:                 ${payer.publicKey}`)
     console.log(`mint account:                  ${mint.publicKey}`)
-    console.log(`Token Associated Account:      ${associatedTokenAccount}`)
-    console.log(`Token Program:                 ${TOKEN_PROGRAM_ID}`)
-    console.log(`Token 2022 Program:            ${TOKEN_2022_PROGRAM_ID}`)
-    console.log(`Token Metadata Program:        ${TOKEN_METADATA_PROGRAM_ID}`)
-    console.log(`System Program:                ${anchor.web3.SystemProgram.programId}`)
+    console.log(`Token Associated account:      ${associatedTokenAccount}`)
     console.log(`mint PDA account:              ${mintPDA}`)
     console.log(`master edition PDA account:    ${masterEditionPDA}`)
     console.log(`metadata PDA account:          ${metadataPDA}`)
+    console.log(`token registry PDA account:    ${tokenRegistryPDA}`)
 
-    console.log("\nBumps")
-    console.log(`master edition PDA Bump:       ${masterEditionPDABump}`)
-    console.log(`metadata PDA Bump:             ${metadataBump}`)
-    // console.log(`metadataPDA account: ${metadataPDA}`)
+    console.log("\nPrograms")
+    console.log(`token program:                 ${TOKEN_PROGRAM_ID}`)
+    console.log(`token 2022 program:            ${TOKEN_2022_PROGRAM_ID}`)
+    console.log(`token metadata program:        ${TOKEN_METADATA_PROGRAM_ID}`)
     
     // Call the mint_nft function
     await program.methods
@@ -102,9 +133,17 @@ describe("factory", () => {
             systemProgram: anchor.web3.SystemProgram.programId,
             tokenProgram: TOKEN_2022_PROGRAM_ID,
             tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            tokenRegistry: tokenRegistryPDA
         })
         .rpc();
   });
+
+  it("The token_registry is updated", async () => {
+    const tokenRegistryAccount = await program.account.tokenRegistry.fetch(tokenRegistryPDA);
+    assert(tokenRegistryAccount.tokens.at(-1).id==id)
+  });
+
+
 });
 
 // function to check that external programs are present in the test environment
@@ -127,4 +166,29 @@ async function checkAccounts (connection: Connection){
   } catch (error: unknown) {
     console.warn(`spl token program @ ${id} not found\n${error}`)
   }
+}
+
+function generateRandomString(length: number): string {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let randomString = '';
+  for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      randomString += charset[randomIndex];
+  }
+  return randomString;
+}
+
+export interface TokenInfo {
+  id: string;           // Token ID
+  token_mint: PublicKey;  // Token mint address (Pubkey)
+}
+
+export interface TokenRegistry {
+  tokens: TokenInfo[];  // Array of TokenInfo
+  total_tokens: number; // Total number of tokens
+}
+
+export interface InitTokenParams {
+  id: string;
+  uri: string;
 }

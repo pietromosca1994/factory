@@ -105,3 +105,4 @@ cargo tree
 - [Account Types](https://www.anchor-lang.com/docs/account-types)
 - [Anchor.toml](https://www.anchor-lang.com/docs/manifest)
 - [Metaplex Token Metadata](https://developers.metaplex.com/token-metadata)
+- [Account Space Chart](https://www.anchor-lang.com/docs/space)

@@ -12,3 +12,8 @@ pub struct InitTokenParams {
     pub id: String,
     pub uri: String,
 }
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub struct TransferTokenParams {
+    pub id: String,
+}

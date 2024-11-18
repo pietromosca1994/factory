@@ -80,10 +80,14 @@ describe("factory", () => {
     );
 
     // Derive the associated token address amount for the mint
-    const associatedTokenAccount = anchor.utils.token.associatedAddress({
-      mint: mintPDA,
-      owner: payer.publicKey,
-    });
+    const [tokenAccount, tokenAccountBump] = await anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        provider.publicKey.toBuffer(), 
+        TOKEN_2022_PROGRAM_ID.toBuffer(),
+        mintPDA.toBuffer()
+      ],
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
 
     // Derive the metadata account PDA
     const [metadataPDA, metadataBump] = web3.PublicKey.findProgramAddressSync(
@@ -110,7 +114,7 @@ describe("factory", () => {
     console.log(`provider account:              ${provider.publicKey}`)
     console.log(`payer account:                 ${payer.publicKey}`)
     console.log(`mint account:                  ${mint.publicKey}`)
-    console.log(`Token Associated account:      ${associatedTokenAccount}`)
+    console.log(`token account PDA account:     ${tokenAccount}`)
     console.log(`mint PDA account:              ${mintPDA}`)
     console.log(`master edition PDA account:    ${masterEditionPDA}`)
     console.log(`metadata PDA account:          ${metadataPDA}`)
@@ -127,22 +131,27 @@ describe("factory", () => {
         .accounts({
             signer: provider.publicKey,
             mint: mint,
+            tokenAccount: tokenAccount,
             metadata: metadataPDA,
             masterEdition: masterEditionPDA,
             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             systemProgram: anchor.web3.SystemProgram.programId,
             tokenProgram: TOKEN_2022_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
             tokenRegistry: tokenRegistryPDA
         })
+        // .signers([provider])
         .rpc();
+
+    let tokenAmount = await provider.connection.getTokenAccountBalance(tokenAccount);
+    assert(tokenAmount.value.uiAmount==1, "The account holds more than 1 token");
   });
 
   it("The token_registry is updated", async () => {
     const tokenRegistryAccount = await program.account.tokenRegistry.fetch(tokenRegistryPDA);
     assert(tokenRegistryAccount.tokens.at(-1).id==id)
   });
-
 
 });
 

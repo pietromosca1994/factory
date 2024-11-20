@@ -16,6 +16,7 @@ describe("factory", () => {
 
   // Metaplex Constants
   const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
+  const SYSVAR_INSTRUCTIONS_ID = new PublicKey("Sysvar1nstructions1111111111111111111111111");
 
   // Create keypairs for the payer and mint accounts
   const payer = provider;
@@ -67,7 +68,7 @@ describe("factory", () => {
     // Create the InitTokenParams struct
     const token_params = {
         id: id,
-        uri: "https://example.com/metadata.json", // Replace with your metadata URI
+        uri: "https://arweave.net/mOOBHcZUTm3DQ_srGltVfWGwqKcMI0_6wpolJ-rxlVA", // Replace with your metadata URI
     };
 
     // Derive the mint PDA
@@ -139,6 +140,7 @@ describe("factory", () => {
             tokenProgram: TOKEN_2022_PROGRAM_ID,
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            sysvarInstructions: SYSVAR_INSTRUCTIONS_ID,
             tokenRegistry: tokenRegistryPDA
         })
         // .signers([provider])

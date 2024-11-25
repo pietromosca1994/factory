@@ -27,6 +27,10 @@ mod factory {
         mint_nft::mint_nft(_ctx, init_token_params)
     }
 
+    pub fn mint_nft_core(_ctx: Context<MintNFTCore>, init_token_params: InitTokenParams) -> Result<()> {
+        mint_nft_core::mint_nft_core(_ctx, init_token_params)
+    }
+
     // pub fn transfer_nft(_ctx: Context<BurnNFT>, transfer_token_params: BurnTokenParams) -> Result<()> {
 
     //     // get accounts

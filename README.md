@@ -97,7 +97,7 @@ solana airdrop 2
 ## Rust Enviornment
 - Check rust tree (for crates dependencies)
 ```bash
-cargo tree
+cargo tree -e features
 ```
 
 ## References

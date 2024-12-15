@@ -24,3 +24,4 @@ mpl-core = {version = "0.8.0", features = ['anchor']}
 mpl-token-metadata = "4.1.2"
 solana-program = "1.17.3"
 solana-zk-token-sdk = "1.18.17"
+# spl-token-2022 = "6.0.0"

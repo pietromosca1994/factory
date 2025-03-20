@@ -1,0 +1,30 @@
+{
+    "solanaNetwork": "localnet",
+    "tokenStandard": "non-fungible",
+    "tokenMeta":{
+        "name": "batteryNFT Test",
+        "symbol": "BNFTX",
+        "uri": "https://devnet.irys.xyz/DbPDkeTvm9DTJXxkLEFvHJWDAfu3FortEDHTvsy9sSQB",
+        "description": "BatteryNFT exaple description",
+        "attributes":[
+            {
+                "trait_type": "manufacturer",
+                "value": "LG"
+            },
+            {
+                "trait_type": "battery_cathegory",
+                "value": "Industrial"
+            }
+        ],
+        "properties":[
+            {
+                "key": "SOH [%]",
+                "value": "100"
+            },
+            {
+                "key": "Cycles [EFC]",
+                "value": "1000"
+            }
+        ]
+    }
+}

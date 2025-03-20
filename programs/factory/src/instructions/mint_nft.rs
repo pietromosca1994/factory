@@ -10,16 +10,16 @@ use mpl_token_metadata::{
 };
 
 pub use crate::program_events::NFTCreationEvent;
-pub use crate::program_types::{InitTokenParams, TokenInfo};
+pub use crate::program_types::{TokenMeta, TokenInfo};
 pub use crate::program_accounts::TokenRegistry;
 
-pub fn mint_nft(_ctx: Context<MintNFT>, init_token_params: InitTokenParams) -> Result<()> {
+pub fn mint_nft(_ctx: Context<MintNFT>, token_meta: TokenMeta) -> Result<()> {
 
     // set metadata
-    let name: String = format!("{}{}", String::from("token_"), init_token_params.id);
+    let name: String = format!("{}{}", String::from("token_"), token_meta.name);
     let symbol: String = String::from("VLT");
 
-    // msg!("token id:                         {}", init_token_params.id);
+    // msg!("token id:                         {}", token_meta.name);
     // msg!("mint account:                     {}", _ctx.accounts.mint.key().to_string());
     // msg!("token account:                    {}", _ctx.accounts.token_account.key().to_string());
     // msg!("master edition account:           {}", _ctx.accounts.master_edition.key().to_string());
@@ -29,7 +29,7 @@ pub fn mint_nft(_ctx: Context<MintNFT>, init_token_params: InitTokenParams) -> R
     // Construct the signers array with the proper seed and bump for each PDA
     let signers: &[&[&[u8]]] = &[
         // Seed and bump for the mint PDA
-        &["mint".as_bytes(), init_token_params.id.as_bytes(), &[_ctx.bumps.mint]],
+        &["mint".as_bytes(), token_meta.name.as_bytes(), &[_ctx.bumps.mint]],
     ];
 
     // let _ = MintV1CpiBuilder::new(&_ctx.accounts.token_metadata_program.to_account_info())
@@ -81,7 +81,7 @@ pub fn mint_nft(_ctx: Context<MintNFT>, init_token_params: InitTokenParams) -> R
                                 .authority(&_ctx.accounts.signer.to_account_info())
                                 .name(name)
                                 .symbol(symbol)
-                                .uri(init_token_params.uri)
+                                .uri(token_meta.uri)
                                 .seller_fee_basis_points(0)
                                 .metadata(&_ctx.accounts.metadata.to_account_info())
                                 .system_program(&_ctx.accounts.system_program.to_account_info())
@@ -104,14 +104,14 @@ pub fn mint_nft(_ctx: Context<MintNFT>, init_token_params: InitTokenParams) -> R
     //                             .asset(&_ctx.accounts.mint.to_account_info())
     //                             .update_authority(Some(&_ctx.accounts.mint.to_account_info()))
     //                             .authority(Some(&_ctx.accounts.signer.to_account_info()))
-    //                             .uri(init_token_params.uri)
+    //                             .uri(token_meta.uri)
     //                             .system_program(&_ctx.accounts.system_program.to_account_info())
     //                             // .uses(uses)
     //                             .invoke_signed(signers)?;
 
     // Emit the NFTCreationEvent
     emit!(NFTCreationEvent {
-        id: init_token_params.id.clone(),
+        id: token_meta.name.clone(),
         mint: _ctx.accounts.mint.key(),
         owner: _ctx.accounts.signer.key(),
         
@@ -119,7 +119,7 @@ pub fn mint_nft(_ctx: Context<MintNFT>, init_token_params: InitTokenParams) -> R
 
     // Update token registry
     let token_info = TokenInfo{
-        id: init_token_params.id.clone(),
+        id: token_meta.name.clone(),
         token_mint: _ctx.accounts.mint.key()
     };
     _ctx.accounts.token_registry.tokens.push(token_info);
@@ -131,7 +131,7 @@ pub fn mint_nft(_ctx: Context<MintNFT>, init_token_params: InitTokenParams) -> R
 
 #[derive(Accounts)]
 #[instruction(
-    init_token_params: InitTokenParams
+    token_meta: TokenMeta
 )]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -144,7 +144,7 @@ pub struct MintNFT<'info> {
         mint::authority = signer.key(),
         mint::freeze_authority = signer.key(),
         mint::token_program = token_program,
-        seeds = [b"mint", init_token_params.id.as_bytes()],    // the PDA is seeded with the token ID to ensure uniqueness
+        seeds = [b"mint", token_meta.name.as_bytes()],    // the PDA is seeded with the token ID to ensure uniqueness
         bump,
     )]
     pub mint: InterfaceAccount<'info, Mint>,

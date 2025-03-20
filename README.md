@@ -20,7 +20,7 @@ cargo update
 
 ## Testing
 ### Local Environment
-1. Start a [Local Solana Cluster](https://solana.com/developers/guides/getstarted/solana-test-validator) (ref: [Test the Program](https://solana.com/docs/programs/anchor)):
+1. Start a [Local Solana Cluster](https://solana.com/developers/guides/getstarted/solana-test-validator) (ref: [Test the Program](https://solana.com/docs/programs/anchor)):  
 1.1 Start the cluster  
 ``` bash 
 solana-test-validator
@@ -28,32 +28,32 @@ solana-test-validator
 1.2
 Add addtional programs 
 ```bash
-solana program dump -um metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./tests/metaplex_token_metadata_program.so
-solana program dump -um TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA ./tests/spl_token_program.so
-solana program dump -um CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d ./tests/mpl_core_program.so
-solana program dump -um TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb ./tests/token_2022_program.so
-solana program dump -um ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL ./tests/associated_token_program.so
+solana program dump -u m metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./tests/metaplex_token_metadata_program.so
+solana program dump -u m TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA ./tests/spl_token_program.so
+solana program dump -u m CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d ./tests/mpl_core_program.so
+solana program dump -u m TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb ./tests/token_2022_program.so
+solana program dump -u m ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL ./tests/associated_token_program.so
 ```
 
-Add the programs to ```Anchor.toml```
+Add the programs to ```Anchor.toml``` for testing directly with anchor
 ```
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"  
 program = "tests/metaplex_token_metadata_program.so"
 ```
 
-In a different prompt 
+In a different prompt. Configs are stored in ```~/.config/solana/cli/config.yml```
 ``` bash 
 solana config set --url http://127.0.0.1:8899
 ```
-Cloning programs
+Run the local validator with the dowloaded programs programs
 ```bash 
 solana-test-validator \
---bpf-program --bpf-program metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./tests/metaplex_token_metadata_program.so \
---bpf-program --bpf-program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA ./tests/spl_token_program.so \
---bpf-program --bpf-program CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d ./tests/mpl_core_program.so \
---bpf-program --bpf-program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb ./tests/token_2022_program.so \
---bpf-program --bpf-program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL ./tests/associated_token_program.so \
+--bpf-program metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./tests/metaplex_token_metadata_program.so \
+--bpf-program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA ./tests/spl_token_program.so \
+--bpf-program CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d ./tests/mpl_core_program.so \
+--bpf-program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb ./tests/token_2022_program.so \
+--bpf-program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL ./tests/associated_token_program.so \
 --reset
 ```
 
@@ -106,3 +106,4 @@ cargo tree -e features
 - [Anchor.toml](https://www.anchor-lang.com/docs/manifest)
 - [Metaplex Token Metadata](https://developers.metaplex.com/token-metadata)
 - [Account Space Chart](https://www.anchor-lang.com/docs/space)
+- [Anchor Staking Example](https://developers.metaplex.com/core/guides/anchor/anchor-staking-example)

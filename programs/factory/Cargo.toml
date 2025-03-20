@@ -18,10 +18,11 @@ no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 
 [dependencies]
-anchor-lang = {version = "0.30.1", features = ["init-if-needed"]}
-anchor-spl =    "0.30.1"
-mpl-core = {version = "0.8.0", features = ['anchor']}
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+anchor-spl = "0.30.1"
+mpl-core = { version = "0.7.0", features = ["anchor"] }  # ⚠️ Downgrade if needed
 mpl-token-metadata = "4.1.2"
-solana-program = "1.17.3"
-solana-zk-token-sdk = "1.18.17"
+solana-program = "1.16.14"  # ✅ Use compatible version
+solana-zk-token-sdk = "1.16.14"  # ✅ Match solana-program version
+
 # spl-token-2022 = "6.0.0"

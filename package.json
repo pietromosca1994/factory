@@ -2,7 +2,8 @@
   "license": "ISC",
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "metadata": "tsx ./metadata.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
@@ -12,7 +13,9 @@
     "@metaplex-foundation/umi": "^0.9.2",
     "@metaplex-foundation/umi-bundle-defaults": "^0.9.2",
     "@metaplex-foundation/umi-uploader-irys": "^0.9.1",
-    "@solana/spl-token": "^0.4.9"
+    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.98.0",
+    "tsx": "^4.19.3"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",

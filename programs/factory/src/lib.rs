@@ -7,11 +7,11 @@ pub mod program_events;
 
 use instructions::*;
 
-use program_types::{InitTokenParams, TransferTokenParams, TokenInfo};
+use program_types::{TokenMeta, TransferTokenParams, TokenInfo};
 use program_events::NFTCreationEvent;
 use program_accounts::TokenRegistry;
 
-declare_id!("GGVMhhhYAUuioAw1npbv1NMFBuXs8icgGYQVfjoyEoup");
+declare_id!("374sEAYBSbxqHpzn9rsgkd2ECW1HgtiNFThC8h8txjgp");
 
 #[program]
 mod factory {
@@ -23,12 +23,12 @@ mod factory {
         Ok(())
     }
 
-    pub fn mint_nft(_ctx: Context<MintNFT>, init_token_params: InitTokenParams) -> Result<()> {
-        mint_nft::mint_nft(_ctx, init_token_params)
+    pub fn mint_nft(_ctx: Context<MintNFT>, token_meta: TokenMeta) -> Result<()> {
+        mint_nft::mint_nft(_ctx, token_meta)
     }
 
-    pub fn mint_nft_core(_ctx: Context<MintNFTCore>, init_token_params: InitTokenParams) -> Result<()> {
-        mint_nft_core::mint_nft_core(_ctx, init_token_params)
+    pub fn mint_nft_core(_ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result<()> {
+        mint_nft_core::mint_nft_core(_ctx, token_meta)
     }
 
     // pub fn transfer_nft(_ctx: Context<BurnNFT>, transfer_token_params: BurnTokenParams) -> Result<()> {

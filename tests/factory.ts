@@ -1,43 +1,67 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program, web3} from "@coral-xyz/anchor";
 import { Factory } from "../target/types/factory";
-import { PublicKey, Keypair, LAMPORTS_PER_SOL, Connection} from "@solana/web3.js";
+import { PublicKey, Keypair, LAMPORTS_PER_SOL, clusterApiUrl, Connection} from "@solana/web3.js";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { createSignerFromKeypair, signerIdentity} from '@metaplex-foundation/umi'
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress} from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TokenError, thawAccountInstructionData} from "@solana/spl-token";
 import { fetchAsset} from '@metaplex-foundation/mpl-core'
 import { assert } from "chai";
-import { token } from "@coral-xyz/anchor/dist/cjs/utils";
+
+import {SolanaNetwork, TokenConfigs} from './types'
+import { airdrop, delay } from "./utils";
+
+import configs from './config.json';
+import wallet from '../2rz6Z257ETCouoWTYTZYu9wV6zGE7pVPNXmm6689S3XS.json'
+
+const tokenConfigs: TokenConfigs = configs;
+console.log(`Configs\n${tokenConfigs}`)
+const privateKeyArray=new Uint8Array(wallet)
+
+var solanaNetwork: SolanaNetwork
+if (tokenConfigs.solanaNetwork.toLowerCase() == 'localnet') {
+    solanaNetwork = SolanaNetwork.Localnet;
+} else if (tokenConfigs.solanaNetwork.toLowerCase() == 'mainnet') {
+    solanaNetwork = SolanaNetwork.MainnetBeta;
+} else if (tokenConfigs.solanaNetwork.toLowerCase() == 'devnet') {
+    solanaNetwork = SolanaNetwork.Devnet;
+}
 
 describe("factory", () => {
-  // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.env();
-  anchor.setProvider(provider);
-  console.log(`Connection: ${provider.connection.rpcEndpoint}`)
+  // Configure the client to use the local cluster
+  let provider
+  if (solanaNetwork==SolanaNetwork.Localnet){
+    // working
+    provider = anchor.AnchorProvider.env();
 
+  } else if (solanaNetwork==SolanaNetwork.Devnet){
+    let connection = new Connection(clusterApiUrl('devnet'));
+    const keypair = Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+    const wallet = new anchor.Wallet(keypair);
+    provider = new anchor.AnchorProvider(connection, wallet, {
+      commitment: "processed",
+    });
+  }
+  anchor.setProvider(provider);
+  console.log(`🔗 Connection: ${provider.connection.rpcEndpoint}`)
+  console.log('🗝️ Anchor wallet Public Key:', provider.wallet.publicKey.toString());
+
+  // get the program
   const program = anchor.workspace.Factory as Program<Factory>;
 
-  // Metaplex Constants
-  const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-  const SYSVAR_INSTRUCTIONS_ID = new PublicKey("Sysvar1nstructions1111111111111111111111111");
-  const MPL_CORE_PROGRAM_ID = new PublicKey('CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d')
+  // create umi
+  const umi = createUmi(solanaNetwork, "confirmed")
+  const keypair = umi.eddsa.createKeypairFromSecretKey(privateKeyArray)
+  umi.use(signerIdentity(createSignerFromKeypair(umi, keypair)));
 
-  // Create keypairs for the payer and mint accounts
-  const payer = provider;
-
-  const id = generateRandomString(10)
+  const payer = Keypair.fromSecretKey(privateKeyArray); 
+  // const payer = umi.payer
   
-  const [tokenRegistryPDA, tokenRegistryBump] = web3.PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('token_registry'),
-    ],
-    program.programId
-  )
-
-
   it("Initializes the program", async () => {
+    // airdrop funds
+    await airdrop(payer.publicKey, solanaNetwork, 5);
 
-    // derive the tokenRegistry account
+    // derive the tokenRegistry account as PDA with seeds ['token_registry']
     const [tokenRegistryPDA, tokenRegistryBump] = web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from('token_registry'),
@@ -59,65 +83,48 @@ describe("factory", () => {
   });
 
   it("Creates a core NFT", async () => {
-    const asset = Keypair.generate();
-    const payer = Keypair.generate()
-    const airdropSignature = await provider.connection.requestAirdrop(payer.publicKey, 5e9);
-    await provider.connection.confirmTransaction(airdropSignature, "confirmed");
-    const balance = await provider.connection.getAccountInfo(payer.publicKey)
-    console.log(`Balance for ${payer.publicKey}: ${balance.lamports/LAMPORTS_PER_SOL}`)
-
-    const cluster = "127.0.0.1"
-    const umi = createUmi(provider.connection);
-    // const myKeypairSigner = createSignerFromKeypair(umi, payer);
-    // umi.use(signerIdentity(payer));
-
-    // Create the InitTokenParams struct
-    const token_params = {
-        id: id,
-        uri: "https://arweave.net/mOOBHcZUTm3DQ_srGltVfWGwqKcMI0_6wpolJ-rxlVA", // Replace with your metadata URI
-    };
-
-    // Derive the mint PDA
-    const [assetPDA, assetBump] = await anchor.web3.PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("asset"), 
-        Buffer.from(token_params.id)
-      ],
-      program.programId
-    );
-    
-    console.log(`payer account:                 ${payer.publicKey}`)
-    console.log(`asset account:                 ${asset.publicKey}`)
-    console.log(`assetPDA:                      ${assetPDA}`)
+    // create battery unique ID
+    const id = generateRandomString(10)
+    tokenConfigs.tokenMeta.name=id
 
     // Call the mint_nft_core function
     await program.methods
-    .mintNftCore(token_params) // Call the function with the InitTokenParams struct
+    .mintNftCore(tokenConfigs.tokenMeta)
     .accounts({
         signer: payer.publicKey,
         payer: payer.publicKey,
-        asset: assetPDA,
-        // rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        // systemProgram: anchor.web3.SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        // mplCoreProgram: MPL_CORE_PROGRAM_ID
+        // tokenProgram: TOKEN_2022_PROGRAM_ID,
     })
     .signers([payer])
     .rpc();
+    await delay(10000)
+    
+    // run tests
+    // fetch the asset
+    const [assetPDA, assetBump] = await anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("asset_"), 
+        Buffer.from(id)
+      ],
+      program.programId
+    );
 
-    // fetch asset
     const nftCoreAsset = await fetchAsset(umi, assetPDA.toString(), {
       skipDerivePlugins: false,
     })
 
-    assert(nftCoreAsset.name == "token_"+token_params.id, "name not corresponding")
-    assert(nftCoreAsset.uri == token_params.uri, 'uri not corresponding')
-    let attributesKeys=[]
-    for (const attribute of nftCoreAsset.attributes?.attributeList ?? []) {
-      attributesKeys.push(attribute.key)
+    // check the name
+    assert(nftCoreAsset.name == tokenConfigs.tokenMeta.name, "❌ name not corresponding")
+    // check the uri
+    assert(nftCoreAsset.uri == tokenConfigs.tokenMeta.uri, '❌ uri not corresponding')
+    // check the properties
+    let propertiesKeys=[]
+    for (const property of tokenConfigs.tokenMeta.properties ?? []) {
+        propertiesKeys.push(property.key)
     }
-    assert(attributesKeys.includes("attribute1"), `feature_1 not in ${attributesKeys}`)
-    assert(attributesKeys.includes("attribute2"), `feature_1 not in ${attributesKeys}`)
+    for (const attribute of nftCoreAsset.attributes?.attributeList ?? []) {
+        assert(propertiesKeys.includes(attribute.key), `❌ ${attribute} not in ${propertiesKeys}`)
+    }
   });
 
   // it("Creates an NFT", async () => {

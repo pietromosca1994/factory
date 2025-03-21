@@ -1,19 +1,11 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    token_2022::{MintTo, mint_to, Token2022, spl_token_2022},
-    
-    token_interface::{TokenInterface, Mint, TokenAccount}
+    token_2022::{spl_token_2022},
 };
 use mpl_core::{
-    types::{PluginAuthorityPair, Plugin, Attributes, PluginAuthority, Attribute},
-    accounts::{BaseAssetV1, BaseCollectionV1}, 
-    instructions::{CreateV1CpiBuilder, CreateV2CpiBuilder}
+    types::{PluginAuthorityPair, Plugin, Attributes, PluginAuthority, Attribute}, 
+    instructions::{CreateV2CpiBuilder}
 };
-// use mpl_token_metadata::{
-//     accounts::{Metadata, MasterEdition},
-//     instructions::{TransferV1CpiBuilder, MintV1CpiBuilder},
-//     types::{PrintSupply, TokenStandard, Creator},
-// };
 
 pub use crate::program_events::NFTCreationEvent;
 pub use crate::program_types::{TokenMeta, TokenInfo};
@@ -24,8 +16,18 @@ pub fn mint_nft_core(ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result
     // let name: String = format!("{}{}", String::from("token_"), token_meta.name);
     msg!("asset account: {}", ctx.accounts.asset.key().to_string());
     
-    let signers: &[&[&[u8]]] = &[ 
-        &["asset_".as_bytes(), token_meta.name.as_bytes(), &[ctx.bumps.asset]], 
+    let signers: &[&[&[u8]]] = &[
+        &[
+            b"asset",
+            token_meta.name.as_bytes(),
+            &[ctx.bumps.asset],
+        ],
+        // update authority is not necessarily needed for signing this
+        &[
+            b"update_authority",
+            ctx.accounts.signer.key.as_ref(),
+            &[ctx.bumps.update_authority_pda],
+        ],
     ];
 
     let mut attribute_list: Vec<Attribute> = Vec::new();
@@ -55,7 +57,8 @@ pub fn mint_nft_core(ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result
     ];
 
     // Interact with mpl_core to create the NFT
-    _=CreateV2CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
+    // Ref: https://developers.metaplex.com/core/create-asset
+    let _=CreateV2CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
         .asset(&&ctx.accounts.asset.to_account_info())
         .payer(&ctx.accounts.signer.to_account_info())
         .name(token_meta.name.clone())
@@ -63,13 +66,15 @@ pub fn mint_nft_core(ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result
         .system_program(&ctx.accounts.system_program.to_account_info())
         .owner(Some(&ctx.accounts.signer.to_account_info()))
         .plugins(asset_plugins)
+        .update_authority(Some(&ctx.accounts.signer.to_account_info()))
+        // .update_authority(Some(&ctx.accounts.update_authority_pda.to_account_info()))
         // .invoke();
         .invoke_signed(signers)?;
 
     // Emit NFT creation event
     emit!(NFTCreationEvent {
-        id: token_meta.name.clone(),
-        mint: ctx.accounts.asset.key(),
+        name: token_meta.name.clone(),
+        asset: ctx.accounts.asset.key(),
         owner: ctx.accounts.signer.key(),
     });
 
@@ -85,13 +90,20 @@ pub struct MintNFTCore<'info> {
     pub signer: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    ///CHECK: check
+    ///CHECK: check pda address
     #[account(
         mut,
-        seeds = [b"asset_", token_meta.name.as_bytes()], // Ensure consistent seed for correct address
-        bump,                         // Ensures correct bump seed to avoid collisions
+        seeds = [b"asset", token_meta.name.as_bytes()],
+        bump,                         
     )]
     pub asset: UncheckedAccount<'info>,
+    ///CHECK: check pda address 
+    #[account(
+        mut,
+        seeds = [b"update_authority", signer.key().as_ref()],
+        bump,                         
+    )]
+    pub update_authority_pda: UncheckedAccount<'info>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
     

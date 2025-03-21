@@ -13,6 +13,7 @@ import { airdrop, delay } from "./utils";
 
 import configs from './config.json';
 import wallet from '../2rz6Z257ETCouoWTYTZYu9wV6zGE7pVPNXmm6689S3XS.json'
+import { token } from "@coral-xyz/anchor/dist/cjs/utils";
 
 const tokenConfigs: TokenConfigs = configs;
 console.log(`Configs\n${tokenConfigs}`)
@@ -54,8 +55,16 @@ describe("factory", () => {
   const keypair = umi.eddsa.createKeypairFromSecretKey(privateKeyArray)
   umi.use(signerIdentity(createSignerFromKeypair(umi, keypair)));
 
+  // get the cluster 
+  const cluster=umi.rpc.getCluster()
+
+  // set the payer 
   const payer = Keypair.fromSecretKey(privateKeyArray); 
   // const payer = umi.payer
+
+  // create battery unique ID
+  const id = generateRandomString(10)
+  tokenConfigs.tokenMeta.name=id
   
   it("Initializes the program", async () => {
     // airdrop funds
@@ -82,33 +91,40 @@ describe("factory", () => {
     assert(accountInfo.owner.equals(program.programId), `token_registry account owner: ${accountInfo.owner}\n program id: ${program.programId}`);
   });
 
-  it("Creates a core NFT", async () => {
-    // create battery unique ID
-    const id = generateRandomString(10)
-    tokenConfigs.tokenMeta.name=id
-
+  it("Creates a dynamic core NFT", async () => {
+    // get the asset PDA
+    const [assetPDA, assetBump] = await anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("asset"), 
+        Buffer.from(id)
+      ],
+      program.programId
+    );
+    
+    console.log(tokenConfigs.tokenMeta)
+        
     // Call the mint_nft_core function
     await program.methods
     .mintNftCore(tokenConfigs.tokenMeta)
     .accounts({
         signer: payer.publicKey,
         payer: payer.publicKey,
-        // tokenProgram: TOKEN_2022_PROGRAM_ID,
     })
     .signers([payer])
     .rpc();
     await delay(10000)
+
+    console.log(`✅ Token ${tokenConfigs.tokenMeta.name} created and minted successfully!`);
+    if (cluster=='localnet' || cluster=='custom'){
+        console.log(`🔑 Solana Explorer:   https://explorer.solana.com/address/${assetPDA}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`)
+        console.log(`🔑 Solscan:           https://solscan.io/token/${assetPDA}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`)
+    } else {
+        console.log(`🔑 Solana Explorer:   https://explorer.solana.com/address/${assetPDA}?cluster=${cluster}`)
+        console.log(`🔑 Solscan:           https://solscan.io/token/${assetPDA}?cluster=${cluster}`)
+    }
     
     // run tests
     // fetch the asset
-    const [assetPDA, assetBump] = await anchor.web3.PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("asset_"), 
-        Buffer.from(id)
-      ],
-      program.programId
-    );
-
     const nftCoreAsset = await fetchAsset(umi, assetPDA.toString(), {
       skipDerivePlugins: false,
     })
@@ -126,6 +142,61 @@ describe("factory", () => {
         assert(propertiesKeys.includes(attribute.key), `❌ ${attribute} not in ${propertiesKeys}`)
     }
   });
+
+  it("Updates the dynamic core NFT", async() => {
+    // get the asset PDA
+    const [assetPDA, assetBump] = await anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("asset"), 
+        Buffer.from(id)
+      ],
+      program.programId
+    );
+
+    // update one of the properties 
+    const updatePropertyKey=tokenConfigs.tokenMeta.properties[0].key
+    const updatePropertyValue='updated'
+    tokenConfigs.tokenMeta.properties[0].value=updatePropertyValue
+    console.log(tokenConfigs.tokenMeta.properties)
+
+    await program.methods.updatePropertiesNftCore(tokenConfigs.tokenMeta)
+    .accounts({
+      signer: payer.publicKey,
+      payer: payer.publicKey,
+    })
+    .signers([payer])
+    .rpc();
+    await delay(10000)
+
+    // run tests
+    // fetch the asset
+    const nftCoreAsset = await fetchAsset(umi, assetPDA.toString(), {
+      skipDerivePlugins: false,
+    })
+
+    // check if the property has been updated
+    const properties: { [key: string]: string }={}
+    for (const attribute of nftCoreAsset.attributes?.attributeList ?? []) {
+      properties[attribute.key]=attribute.value
+    }
+    assert(properties[updatePropertyKey]==updatePropertyValue, `❌ ${updatePropertyKey} not updated is instead ${properties[updatePropertyKey]}`)
+  })
+
+  it("A third part should fail to udpate the core NFT", async() => {
+    // generate a third party
+    const thirdParty = Keypair.generate();
+    
+    // try to update the token
+    await program.methods.updatePropertiesNftCore(tokenConfigs.tokenMeta)
+    .accounts({
+      signer: thirdParty.publicKey, // in this case we simulate a malicious actor trying to update the token
+      payer: payer.publicKey,
+    })
+    .signers([thirdParty])
+    .rpc();
+    await delay(10000)
+  })
+
 
   // it("Creates an NFT", async () => {
 

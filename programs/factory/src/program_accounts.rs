@@ -10,3 +10,9 @@ pub struct TokenRegistry {
     pub tokens: Vec<TokenInfo>,
     pub total_tokens: u64,
 }
+
+// Define a custom PDA struct
+#[account]
+pub struct UpdateAuthorityAccount {
+    pub owner: Pubkey, // Account owner
+}

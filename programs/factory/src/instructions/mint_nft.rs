@@ -1,11 +1,11 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    token_2022::{MintTo, mint_to, Token2022},
+    token_2022::{MintTo, mint_to},
     token_interface::{TokenInterface, Mint, TokenAccount},
     associated_token::{AssociatedToken}};
 use mpl_token_metadata::{
     accounts::{Metadata, MasterEdition},
-    instructions::{CreateV1CpiBuilder, TransferV1CpiBuilder, MintV1CpiBuilder},
+    instructions::{CreateV1CpiBuilder},
     types::{PrintSupply, TokenStandard, Creator},
 };
 
@@ -111,8 +111,8 @@ pub fn mint_nft(_ctx: Context<MintNFT>, token_meta: TokenMeta) -> Result<()> {
 
     // Emit the NFTCreationEvent
     emit!(NFTCreationEvent {
-        id: token_meta.name.clone(),
-        mint: _ctx.accounts.mint.key(),
+        name: token_meta.name.clone(),
+        asset: _ctx.accounts.mint.key(),
         owner: _ctx.accounts.signer.key(),
         
     });

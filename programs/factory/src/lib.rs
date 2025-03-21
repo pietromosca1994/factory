@@ -1,15 +1,17 @@
+#![allow(unexpected_cfgs)]
+
 use anchor_lang::prelude::*;
 
 pub mod program_accounts;
 pub mod instructions;
 pub mod program_types;
 pub mod program_events;
+pub mod program_errors;
+pub mod program_utils;
 
 use instructions::*;
 
-use program_types::{TokenMeta, TransferTokenParams, TokenInfo};
-use program_events::NFTCreationEvent;
-use program_accounts::TokenRegistry;
+use program_types::TokenMeta;
 
 declare_id!("374sEAYBSbxqHpzn9rsgkd2ECW1HgtiNFThC8h8txjgp");
 
@@ -18,9 +20,14 @@ mod factory {
     use super::*;
 
     pub fn init(_ctx: Context<Init>) -> Result<()> {
+        // Assuming init::init returns Result<(), Error>
+        init::init(_ctx)?;  // The `?` operator will return the error if there is one
+        
+        // If you need to log or process something further, you can do that here
         // let token_registry = &ctx.accounts.token_registry;
         // msg!("TokenRegistry owner: {}", token_registry.owner);
-        Ok(())
+    
+        Ok(())  // Return Ok if everything went well
     }
 
     pub fn mint_nft(_ctx: Context<MintNFT>, token_meta: TokenMeta) -> Result<()> {
@@ -31,6 +38,9 @@ mod factory {
         mint_nft_core::mint_nft_core(_ctx, token_meta)
     }
 
+    pub fn update_properties_nft_core(_ctx: Context<UpdatePropertiesNFTCore>, token_meta: TokenMeta) -> Result<()> {
+        update_properties_nft_core::update_properties_nft_core(_ctx, token_meta)
+    }
     // pub fn transfer_nft(_ctx: Context<BurnNFT>, transfer_token_params: BurnTokenParams) -> Result<()> {
 
     //     // get accounts
@@ -65,24 +75,6 @@ mod factory {
     // }
 
 }
-
-#[derive(Accounts)]
-pub struct Init<'info> {
-    #[account(
-        init_if_needed,
-        payer = admin,
-        space = 8 + TokenRegistry::INIT_SPACE,
-        seeds = [b"token_registry"],
-        bump
-    )]
-    pub token_registry: Account<'info, TokenRegistry>,
-
-    #[account(mut)]
-    pub admin: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-
 
 // #[derive(Accounts)]
 // #[instruction(

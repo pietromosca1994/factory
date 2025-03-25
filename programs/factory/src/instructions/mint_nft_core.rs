@@ -9,24 +9,27 @@ use mpl_core::{
 
 pub use crate::program_events::NFTCreationEvent;
 pub use crate::program_types::{TokenMeta, TokenInfo};
-pub use crate::program_accounts::TokenRegistry;
+pub use crate::program_accounts::{Whitelist, UpdateAuthorityAccount};
+pub use crate::program_utils::check_if_in_whitelist;
 
-pub fn mint_nft_core(ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result<()> {
+pub fn mint_nft_core(_ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result<()> {
+    let whitelist = &_ctx.accounts.whitelist;
+    check_if_in_whitelist(*_ctx.accounts.signer.key, whitelist)?;
+
     // the name of the token is "token_<token_id>"
     // let name: String = format!("{}{}", String::from("token_"), token_meta.name);
-    msg!("asset account: {}", ctx.accounts.asset.key().to_string());
+    msg!("asset account: {}", _ctx.accounts.asset.key().to_string());
     
     let signers: &[&[&[u8]]] = &[
         &[
             b"asset",
             token_meta.name.as_bytes(),
-            &[ctx.bumps.asset],
+            &[_ctx.bumps.asset],
         ],
         // update authority is not necessarily needed for signing this
         &[
             b"update_authority",
-            ctx.accounts.signer.key.as_ref(),
-            &[ctx.bumps.update_authority_pda],
+            &[_ctx.bumps.update_authority],
         ],
     ];
 
@@ -40,15 +43,6 @@ pub fn mint_nft_core(ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result
         );
     }
 
-    // attribute_list.push(Attribute {
-    //     key: String::from("SOH [%]"),
-    //     value: String::from("100"),
-    // });
-    // attribute_list.push(Attribute {
-    //     key: String::from("Cycles [EFC]"),
-    //     value: String::from("1000"),
-    // });
-
     let asset_plugins = vec![
         PluginAuthorityPair {
             plugin: Plugin::Attributes(Attributes { attribute_list }),
@@ -58,24 +52,24 @@ pub fn mint_nft_core(ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result
 
     // Interact with mpl_core to create the NFT
     // Ref: https://developers.metaplex.com/core/create-asset
-    let _=CreateV2CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
-        .asset(&&ctx.accounts.asset.to_account_info())
-        .payer(&ctx.accounts.signer.to_account_info())
+    let _=CreateV2CpiBuilder::new(&_ctx.accounts.mpl_core_program.to_account_info())
+        .asset(&_ctx.accounts.asset.to_account_info())
+        .payer(&_ctx.accounts.signer.to_account_info())
         .name(token_meta.name.clone())
         .uri(token_meta.uri.clone())
-        .system_program(&ctx.accounts.system_program.to_account_info())
-        .owner(Some(&ctx.accounts.signer.to_account_info()))
+        .system_program(&_ctx.accounts.system_program.to_account_info())
+        .owner(Some(&_ctx.accounts.signer.to_account_info()))
         .plugins(asset_plugins)
-        .update_authority(Some(&ctx.accounts.signer.to_account_info()))
-        // .update_authority(Some(&ctx.accounts.update_authority_pda.to_account_info()))
+        .update_authority(Some(&_ctx.accounts.signer.to_account_info()))
+        // .update_authority(Some(&_ctx.accounts.update_authority.to_account_info()))
         // .invoke();
         .invoke_signed(signers)?;
 
     // Emit NFT creation event
     emit!(NFTCreationEvent {
         name: token_meta.name.clone(),
-        asset: ctx.accounts.asset.key(),
-        owner: ctx.accounts.signer.key(),
+        asset: _ctx.accounts.asset.key(),
+        signer: _ctx.accounts.signer.key(),
     });
 
     Ok(())
@@ -100,10 +94,17 @@ pub struct MintNFTCore<'info> {
     ///CHECK: check pda address 
     #[account(
         mut,
-        seeds = [b"update_authority", signer.key().as_ref()],
+        seeds = [b"update_authority"],
         bump,                         
     )]
-    pub update_authority_pda: UncheckedAccount<'info>,
+    pub update_authority:  UncheckedAccount<'info>,
+    ///CHECK: check pda address 
+    #[account(
+        mut,
+        seeds = [b"whitelist"],
+        bump,                         
+    )]
+    pub whitelist: Account<'info, Whitelist>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
     

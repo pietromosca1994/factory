@@ -7,9 +7,10 @@ import { createSignerFromKeypair, signerIdentity} from '@metaplex-foundation/umi
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TokenError, thawAccountInstructionData} from "@solana/spl-token";
 import { fetchAsset} from '@metaplex-foundation/mpl-core'
 import { assert } from "chai";
+import * as borsh from "borsh";
 
 import {SolanaNetwork, TokenConfigs} from './types'
-import { airdrop, delay } from "./utils";
+import { airdrop, delay, deserializeWhitelist } from "./utils";
 
 import configs from './config.json';
 import wallet from '../2rz6Z257ETCouoWTYTZYu9wV6zGE7pVPNXmm6689S3XS.json'
@@ -90,6 +91,68 @@ describe("factory", () => {
     const accountInfo = await provider.connection.getAccountInfo(tokenRegistryPDA);
     assert(accountInfo.owner.equals(program.programId), `token_registry account owner: ${accountInfo.owner}\n program id: ${program.programId}`);
   });
+
+  it ("Whitelist is working", async () => {
+    // generate a third party
+    const thirdParty1 = Keypair.generate();
+    const thirdParty2 = Keypair.generate();
+    let error=false
+    
+    await program.methods
+                .addToWhitelist(thirdParty1.publicKey)
+                .accounts({
+                    signer: payer.publicKey,
+                    payer: payer.publicKey,
+                })
+                .signers([payer])
+                .rpc();
+    await delay(1000)
+
+    const [whitelistPDA, assetBump] = await anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("whitelist")
+      ],
+      program.programId
+    );
+
+    const whitelist = await deserializeWhitelist(provider.connection, whitelistPDA);
+
+    assert(
+      whitelist.authorized_users.some((key: PublicKey) => key.toString() === thirdParty1.publicKey.toString()), 
+      `❌ User ${thirdParty1.publicKey.toString()} not in whitelist`
+    );
+
+    try{
+      await program.methods
+      .addToWhitelist(thirdParty2.publicKey)
+      .accounts({
+          signer: thirdParty2.publicKey,
+          payer: payer.publicKey,
+      })
+      .signers([thirdParty2])
+      .rpc();
+      await delay(1000)
+    } catch {
+      error=true
+    }
+    assert(error==true, `❌ A malicious actor is able to modify the whitelist`)
+
+    await program.methods
+    .removeFromWhitelist(thirdParty1.publicKey)
+    .accounts({
+        signer: payer.publicKey,
+        payer: payer.publicKey,
+    })
+    .signers([payer])
+    .rpc();
+    await delay(1000)
+
+    assert(
+      whitelist.authorized_users.some((key: PublicKey) => key.toString() !== thirdParty1.publicKey.toString()), 
+      `❌ User ${thirdParty1.publicKey.toString()} still in whitelist`
+    );
+
+  })
 
   it("Creates a dynamic core NFT", async () => {
     // get the asset PDA
@@ -185,16 +248,23 @@ describe("factory", () => {
   it("A third part should fail to udpate the core NFT", async() => {
     // generate a third party
     const thirdParty = Keypair.generate();
+    let error=false
     
     // try to update the token
-    await program.methods.updatePropertiesNftCore(tokenConfigs.tokenMeta)
-    .accounts({
-      signer: thirdParty.publicKey, // in this case we simulate a malicious actor trying to update the token
-      payer: payer.publicKey,
-    })
-    .signers([thirdParty])
-    .rpc();
-    await delay(10000)
+    try{
+      await program.methods.updatePropertiesNftCore(tokenConfigs.tokenMeta)
+      .accounts({
+        signer: thirdParty.publicKey, // in this case we simulate a malicious actor trying to update the token
+        payer: payer.publicKey,
+      })
+      .signers([thirdParty])
+      .rpc();
+      await delay(10000)
+    } catch {
+      error=true
+    }
+
+    assert(error==true, `❌ A malicious actor is able to update the token`)
   })
 
 

@@ -16,3 +16,8 @@ pub struct TokenRegistry {
 pub struct UpdateAuthorityAccount {
     pub owner: Pubkey, // Account owner
 }
+
+#[account]
+pub struct Whitelist {
+    pub authorized_users: Vec<Pubkey>, // List of allowed users
+}

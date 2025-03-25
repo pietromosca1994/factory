@@ -10,4 +10,7 @@ pub enum ProgramError {
 
     #[msg("Unauthorized access.")]
     Unauthorized,
+
+    #[msg("User is not in the whitelist")]
+    UserNotWhitelisted,
 }

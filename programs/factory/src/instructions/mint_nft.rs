@@ -113,7 +113,7 @@ pub fn mint_nft(_ctx: Context<MintNFT>, token_meta: TokenMeta) -> Result<()> {
     emit!(NFTCreationEvent {
         name: token_meta.name.clone(),
         asset: _ctx.accounts.mint.key(),
-        owner: _ctx.accounts.signer.key(),
+        signer: _ctx.accounts.signer.key(),
         
     });
 

@@ -1,3 +1,5 @@
+import { PublicKey} from "@solana/web3.js";
+
 export enum SolanaNetwork {
     MainnetBeta = "https://api.mainnet-beta.solana.com",
     Devnet = "https://api.devnet.solana.com",
@@ -54,3 +56,21 @@ export class NonFungibleTokenMeta {
         this.properties = props.properties;
     }
 }
+
+export class Whitelist {
+    authorized_users: PublicKey[];
+  
+    constructor(fields: { authorized_users: PublicKey[] }) {
+      this.authorized_users = fields.authorized_users;
+    }
+  
+    static schema = new Map([
+      [
+        Whitelist,
+        {
+          kind: "struct",
+          fields: [["authorized_users", [32]]], // Array of 32-byte public keys
+        },
+      ],
+    ]);
+  }

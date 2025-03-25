@@ -4,12 +4,12 @@ use anchor_lang::prelude::*;
 pub struct NFTCreationEvent {
     pub name: String,
     pub asset: Pubkey,
-    pub owner: Pubkey
+    pub signer: Pubkey
 }
 
 #[event]
 pub struct NFTUpdateEvent {
     pub name: String,
     pub asset: Pubkey,
-    pub owner: Pubkey
+    pub signer: Pubkey
 }

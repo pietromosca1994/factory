@@ -8,6 +8,8 @@ import {fromWeb3JsPublicKey} from '@metaplex-foundation/umi-web3js-adapters'
 import { findAssociatedTokenPda } from '@metaplex-foundation/mpl-toolbox'
 import { Keypair, Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 
+import {Whitelist} from './types'
+
 export async function uploadLogo(umi: Umi, imagePath: string): Promise<string>{
     umi.use(irysUploader())
     const cluster=umi.rpc.getCluster()
@@ -96,3 +98,38 @@ export async function airdrop(address: any, endpoint: string, amount: number) {
 export async function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
+
+export async function deserializeWhitelist(connection: Connection, whitelistPDA: PublicKey): Promise<Whitelist> {
+
+    const accountInfo = await connection.getAccountInfo(whitelistPDA);
+    if (!accountInfo) {
+        throw new Error("Whitelist account not found");
+    }
+     
+    const data=accountInfo.data
+    
+    if (!data || data.length < 12) {
+      throw new Error("Invalid whitelist account data");
+    }
+  
+    let offset = 8; // Skip Anchor's 8-byte discriminator
+    const numUsers = data.readUInt32LE(offset);
+    offset += 4;
+  
+    console.log(`Number of authorized users: ${numUsers}`);
+  
+    if (data.length < offset + numUsers * 32) {
+      throw new Error("Insufficient data for expected number of users");
+    }
+  
+    // Extract PublicKeys
+    const authorized_users: PublicKey[] = [];
+    for (let i = 0; i < numUsers; i++) {
+      const pubkeyBytes = data.slice(offset, offset + 32);
+      authorized_users.push(new PublicKey(pubkeyBytes));
+      offset += 32;
+    }
+  
+    return new Whitelist({ authorized_users });
+  }
+  

@@ -100,10 +100,7 @@ describe("factory", () => {
     
     await program.methods
                 .addToWhitelist(thirdParty1.publicKey)
-                .accounts({
-                    signer: payer.publicKey,
-                    payer: payer.publicKey,
-                })
+                .accounts({})
                 .signers([payer])
                 .rpc();
     await delay(1000)
@@ -125,10 +122,7 @@ describe("factory", () => {
     try{
       await program.methods
       .addToWhitelist(thirdParty2.publicKey)
-      .accounts({
-          signer: thirdParty2.publicKey,
-          payer: payer.publicKey,
-      })
+      .accounts({})
       .signers([thirdParty2])
       .rpc();
       await delay(1000)
@@ -139,10 +133,7 @@ describe("factory", () => {
 
     await program.methods
     .removeFromWhitelist(thirdParty1.publicKey)
-    .accounts({
-        signer: payer.publicKey,
-        payer: payer.publicKey,
-    })
+    .accounts({})
     .signers([payer])
     .rpc();
     await delay(1000)

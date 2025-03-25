@@ -10,6 +10,9 @@ pub fn init(_ctx: Context<Init>) -> Result<()> {
     whitelist.authorized_users = Vec::new();
     whitelist.authorized_users.push(*_ctx.accounts.signer.key);
 
+    msg!("update_authority: {}", _ctx.accounts.update_authority.key());
+    msg!("whitelist:        {}", _ctx.accounts.whitelist.key());
+
     Ok(())
 }
 

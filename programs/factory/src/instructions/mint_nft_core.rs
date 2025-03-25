@@ -13,12 +13,14 @@ pub use crate::program_accounts::{Whitelist, UpdateAuthorityAccount};
 pub use crate::program_utils::check_if_in_whitelist;
 
 pub fn mint_nft_core(_ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result<()> {
+    msg!("asset account:    {}", _ctx.accounts.asset.key().to_string());
+    msg!("update_authority: {}", _ctx.accounts.update_authority.key());
+    
     let whitelist = &_ctx.accounts.whitelist;
     check_if_in_whitelist(*_ctx.accounts.signer.key, whitelist)?;
 
     // the name of the token is "token_<token_id>"
     // let name: String = format!("{}{}", String::from("token_"), token_meta.name);
-    msg!("asset account: {}", _ctx.accounts.asset.key().to_string());
     
     let signers: &[&[&[u8]]] = &[
         &[
@@ -60,8 +62,8 @@ pub fn mint_nft_core(_ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Resul
         .system_program(&_ctx.accounts.system_program.to_account_info())
         .owner(Some(&_ctx.accounts.signer.to_account_info()))
         .plugins(asset_plugins)
-        .update_authority(Some(&_ctx.accounts.signer.to_account_info()))
-        // .update_authority(Some(&_ctx.accounts.update_authority.to_account_info()))
+        // .update_authority(Some(&_ctx.accounts.signer.to_account_info()))
+        .update_authority(Some(&_ctx.accounts.update_authority.to_account_info()))
         // .invoke();
         .invoke_signed(signers)?;
 

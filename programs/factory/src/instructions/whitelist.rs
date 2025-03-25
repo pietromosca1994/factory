@@ -30,10 +30,8 @@ pub fn remove_from_whitelist(_ctx: Context<RemoveFromWhitelist>, user: Pubkey) -
 
 #[derive(Accounts)]
 pub struct AddToWhitelist<'info> {
-    #[account(mut)]
+    #[account(signer)]
     pub signer: Signer<'info>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
     ///CHECK: check pda address 
     #[account(
         mut,
@@ -45,10 +43,8 @@ pub struct AddToWhitelist<'info> {
 
 #[derive(Accounts)]
 pub struct RemoveFromWhitelist<'info> {
-    #[account(mut)]
+    #[account(signer)]
     pub signer: Signer<'info>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
     ///CHECK: check pda address 
     #[account(
         mut,

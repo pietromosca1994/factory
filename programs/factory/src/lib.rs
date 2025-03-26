@@ -30,16 +30,16 @@ mod factory {
         Ok(())  // Return Ok if everything went well
     }
 
-    pub fn mint_nft(_ctx: Context<MintNFT>, token_meta: TokenMeta) -> Result<()> {
-        mint_nft::mint_nft(_ctx, token_meta)
-    }
+    // pub fn mint_nft(_ctx: Context<MintNFT>, token_meta: TokenMeta) -> Result<()> {
+    //     nft_core::mint_nft(_ctx, token_meta)
+    // }
 
     pub fn mint_nft_core(_ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Result<()> {
-        mint_nft_core::mint_nft_core(_ctx, token_meta)
+        nft_core::mint_nft_core(_ctx, token_meta)
     }
 
     pub fn update_properties_nft_core(_ctx: Context<UpdatePropertiesNFTCore>, token_meta: TokenMeta) -> Result<()> {
-        update_properties_nft_core::update_properties_nft_core(_ctx, token_meta)
+        nft_core::update_properties_nft_core(_ctx, token_meta)
     }
 
     pub fn add_to_whitelist(_ctx: Context<AddToWhitelist>, user: Pubkey) -> Result<()> {

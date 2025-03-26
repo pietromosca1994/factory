@@ -38,6 +38,18 @@ mod factory {
         nft_core::mint_nft_core(_ctx, token_meta)
     }
 
+    pub fn update_nft_core(_ctx: Context<UpdateNFTCore>, token_meta: TokenMeta) -> Result<()> {
+        nft_core::update_nft_core(_ctx, token_meta)
+    }
+
+    pub fn transfer_nft_core(_ctx: Context<TransferNFTCore>, token_meta: TokenMeta) -> Result<()> {
+        nft_core::transfer_nft_core(_ctx, token_meta)
+    }
+
+    pub fn burn_nft_core(_ctx: Context<BurnNFTCore>, token_meta: TokenMeta) -> Result<()> {
+        nft_core::burn_nft_core(_ctx, token_meta)
+    }
+
     pub fn update_properties_nft_core(_ctx: Context<UpdatePropertiesNFTCore>, token_meta: TokenMeta) -> Result<()> {
         nft_core::update_properties_nft_core(_ctx, token_meta)
     }

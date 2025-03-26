@@ -10,8 +10,8 @@ pub fn init(_ctx: Context<Init>) -> Result<()> {
     whitelist.authorized_users = Vec::new();
     whitelist.authorized_users.push(*_ctx.accounts.signer.key);
 
-    msg!("update_authority: {}", _ctx.accounts.update_authority.key());
-    msg!("whitelist:        {}", _ctx.accounts.whitelist.key());
+    msg!("authority account:    {}", _ctx.accounts.authority.key());
+    msg!("whitelist account:    {}", _ctx.accounts.whitelist.key());
 
     Ok(())
 }
@@ -27,10 +27,10 @@ pub struct Init<'info> {
         init_if_needed,     // created if needed //TODO remove if in production
         payer = payer,      // User funds the account
         space = 8 + 32,     // Account size
-        seeds = [b"update_authority"], // PDA Seeds signer.key().as_ref()
+        seeds = [b"authority"], // PDA Seeds signer.key().as_ref()
         bump
     )]
-    pub update_authority:  UncheckedAccount<'info>, // Account<'info, UpdateAuthorityAccount>,
+    pub authority:  UncheckedAccount<'info>, // Account<'info, UpdateAuthorityAccount>,
     #[account(
         init_if_needed,
         payer = payer,

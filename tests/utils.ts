@@ -7,8 +7,10 @@ import {TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID} fr
 import {fromWeb3JsPublicKey} from '@metaplex-foundation/umi-web3js-adapters'
 import { findAssociatedTokenPda } from '@metaplex-foundation/mpl-toolbox'
 import { Keypair, Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import { fetchAsset, AssetV1} from '@metaplex-foundation/mpl-core'
 
 import {Whitelist} from './types'
+import { program } from '@coral-xyz/anchor/dist/cjs/native/system';
 
 export async function uploadLogo(umi: Umi, imagePath: string): Promise<string>{
     umi.use(irysUploader())
@@ -132,4 +134,27 @@ export async function deserializeWhitelist(connection: Connection, whitelistPDA:
   
     return new Whitelist({ authorized_users });
   }
-  
+
+
+export async function get_nft_core_pda(name: String, programId: PublicKey | string): Promise<PublicKey> {
+    // Ensure programId is a PublicKey
+    const programPublicKey = typeof programId === "string" ? new PublicKey(programId) : programId;
+
+    const [assetPDA, assetBump] = await PublicKey.findProgramAddressSync(
+        [
+        Buffer.from("asset"), 
+        Buffer.from(name)
+        ],
+        programPublicKey
+    );
+
+    return assetPDA
+}
+
+export async function fetch_nft_core(name: String, programId: PublicKey, umi: Umi): Promise<AssetV1>{
+    const assetPDA = await get_nft_core_pda(name, programId)
+    const asset = await fetchAsset(umi, assetPDA.toString(), {
+        skipDerivePlugins: false,
+      })
+    return asset
+}

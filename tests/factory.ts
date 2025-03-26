@@ -10,7 +10,7 @@ import { assert } from "chai";
 import * as borsh from "borsh";
 
 import {SolanaNetwork, TokenConfigs} from './types'
-import { airdrop, delay, deserializeWhitelist } from "./utils";
+import { airdrop, delay, deserializeWhitelist, fetch_nft_core } from "./utils";
 
 import configs from './config.json';
 import wallet from '../2rz6Z257ETCouoWTYTZYu9wV6zGE7pVPNXmm6689S3XS.json'
@@ -179,9 +179,7 @@ describe("factory", () => {
     
     // run tests
     // fetch the asset
-    const nftCoreAsset = await fetchAsset(umi, assetPDA.toString(), {
-      skipDerivePlugins: false,
-    })
+    const nftCoreAsset = await fetch_nft_core(tokenConfigs.tokenMeta.name, program.programId, umi)
 
     // check the name
     assert(nftCoreAsset.name == tokenConfigs.tokenMeta.name, "❌ name not corresponding")
@@ -197,7 +195,7 @@ describe("factory", () => {
     }
   });
 
-  it("Updates the dynamic core NFT", async() => {
+  it("Updates properties of the dynamic core NFT", async() => {
     // get the asset PDA
     const [assetPDA, assetBump] = await anchor.web3.PublicKey.findProgramAddressSync(
       [
@@ -258,108 +256,48 @@ describe("factory", () => {
     assert(error==true, `❌ A malicious actor is able to update the token`)
   })
 
+  it ("Updates the dynamic core NFT", async() => {
 
-  // it("Creates an NFT", async () => {
+    const newUri = 'newUri'
+    tokenConfigs.tokenMeta.uri=newUri
 
-  //   // await checkAccounts(provider.connection);
+    // Call the mint_nft_core function
+    await program.methods
+    .updateNftCore(tokenConfigs.tokenMeta)
+    .accounts({
+        signer: payer.publicKey,
+        payer: payer.publicKey,
+    })
+    .signers([payer])
+    .rpc();
+    await delay(10000)
 
-  //   // Airdrop SOL to payer for testing
-  //   // const airdropSignature = await provider.connection.requestAirdrop(payer.publicKey, 5e9);
-  //   // await provider.connection.confirmTransaction(airdropSignature, "confirmed");
-  //   // const balance = await provider.connection.getAccountInfo(payer.publicKey)
-  //   // console.log(`Balance for ${payer.publicKey}: ${balance.lamports/LAMPORTS_PER_SOL}`)
-  //   const mint = Keypair.generate();
+    // run tests
+    const nftCoreAsset = await fetch_nft_core(tokenConfigs.tokenMeta.name, program.programId, umi)
+    assert(nftCoreAsset.uri == tokenConfigs.tokenMeta.uri, `❌ uri not updated remains ${nftCoreAsset.uri}`)
+  })
 
-  //   // Create the InitTokenParams struct
-  //   const token_params = {
-  //       id: id,
-  //       uri: "https://arweave.net/mOOBHcZUTm3DQ_srGltVfWGwqKcMI0_6wpolJ-rxlVA", // Replace with your metadata URI
-  //   };
+  it ("Transfers the dynamic core NFT", async() => {
+    const thirdParty1 = Keypair.generate();
 
-  //   // Derive the mint PDA
-  //   const [mintPDA, mintBump] = await anchor.web3.PublicKey.findProgramAddressSync(
-  //     [
-  //       Buffer.from("mint"), 
-  //       Buffer.from(token_params.id)
-  //     ],
-  //     program.programId
-  //   );
+    // Call the mint_nft_core function
+    await program.methods
+    .transferNftCore(tokenConfigs.tokenMeta)
+    .accounts({
+        signer: payer.publicKey,
+        payer: payer.publicKey,
+        newOwner: thirdParty1.publicKey
+    })
+    .signers([payer])
+    .rpc();
+    await delay(10000)
 
-  //   // Derive the associated token address amount for the mint
-  //   const [tokenAccount, tokenAccountBump] = await anchor.web3.PublicKey.findProgramAddressSync(
-  //     [
-  //       provider.publicKey.toBuffer(), 
-  //       TOKEN_2022_PROGRAM_ID.toBuffer(),
-  //       mintPDA.toBuffer()
-  //     ],
-  //     ASSOCIATED_TOKEN_PROGRAM_ID
-  //   );
+    // run tests
+    const nftCoreAsset = await fetch_nft_core(tokenConfigs.tokenMeta.name, program.programId, umi)
+    assert(nftCoreAsset.owner.toString() == thirdParty1.publicKey.toString(), `❌ owner not updated remains ${nftCoreAsset.owner.toString()}`)
+    assert(nftCoreAsset.updateAuthority.address.toString() == thirdParty1.publicKey.toString(), `❌ update authority not updated remains ${nftCoreAsset.updateAuthority.address.toString()}`)
 
-  //   // Derive the metadata account PDA
-  //   const [metadataPDA, metadataBump] = web3.PublicKey.findProgramAddressSync(
-  //     [
-  //       Buffer.from('metadata'),
-  //       TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-  //       mintPDA.toBuffer(),
-  //     ],
-  //     TOKEN_METADATA_PROGRAM_ID
-  //   );
-
-  //   // Derive the master edition PDA
-  //   const [masterEditionPDA, masterEditionPDABump] = web3.PublicKey.findProgramAddressSync(
-  //     [
-  //       Buffer.from('metadata'),
-  //       TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-  //       mintPDA.toBuffer(),
-  //       Buffer.from('edition'),
-  //     ],
-  //     TOKEN_METADATA_PROGRAM_ID
-  //   );
-
-  //   console.log("\nAddresses")
-  //   console.log(`provider account:              ${provider.publicKey}`)
-  //   console.log(`payer account:                 ${payer.publicKey}`)
-  //   console.log(`mint account:                  ${mint.publicKey}`)
-  //   console.log(`token account PDA account:     ${tokenAccount}`)
-  //   console.log(`mint PDA account:              ${mintPDA}`)
-  //   console.log(`master edition PDA account:    ${masterEditionPDA}`)
-  //   console.log(`metadata PDA account:          ${metadataPDA}`)
-  //   console.log(`token registry PDA account:    ${tokenRegistryPDA}`)
-
-  //   console.log("\nPrograms")
-  //   console.log(`token program:                 ${TOKEN_PROGRAM_ID}`)
-  //   console.log(`token 2022 program:            ${TOKEN_2022_PROGRAM_ID}`)
-  //   console.log(`token metadata program:        ${TOKEN_METADATA_PROGRAM_ID}`)
-    
-  //   // Call the mint_nft function
-  //   await program.methods
-  //       .mintNft(token_params) // Call the function with the InitTokenParams struct
-  //       .accounts({
-  //           signer: provider.publicKey,
-  //           mint: mint,
-  //           tokenAccount: tokenAccount,
-  //           metadata: metadataPDA,
-  //           masterEdition: masterEditionPDA,
-  //           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-  //           systemProgram: anchor.web3.SystemProgram.programId,
-  //           tokenProgram: TOKEN_2022_PROGRAM_ID,
-  //           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-  //           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-  //           sysvarInstructions: SYSVAR_INSTRUCTIONS_ID,
-  //           tokenRegistry: tokenRegistryPDA
-  //       })
-  //       // .signers([provider])
-  //       .rpc();
-
-  //   let tokenAmount = await provider.connection.getTokenAccountBalance(tokenAccount);
-  //   assert(tokenAmount.value.uiAmount==1, "The account holds more than 1 token");
-  // });
-
-  // it("The token_registry is updated", async () => {
-  //   const tokenRegistryAccount = await program.account.tokenRegistry.fetch(tokenRegistryPDA);
-  //   assert(tokenRegistryAccount.tokens.at(-1).id==id)
-  // });
-
+  })
 });
 
 // function to check that external programs are present in the test environment

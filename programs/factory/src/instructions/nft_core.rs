@@ -7,7 +7,11 @@ use mpl_core::{
     instructions::{UpdatePluginV1CpiBuilder, CreateV2CpiBuilder, TransferV1CpiBuilder, BurnV1CpiBuilder, UpdateV1CpiBuilder},
 };
 
-pub use crate::program_events::{NFTCreationEvent, NFTUpdateEvent};
+pub use crate::program_events::{NFTCreationEvent, 
+    NFTUpdateEvent, 
+    NFTPropertiesUpdateEvent, 
+    NFTTransferEvent,
+    NFTBurnEvent};
 pub use crate::program_types::{TokenMeta, TokenInfo};
 pub use crate::program_accounts::{UpdateAuthorityAccount, Whitelist};
 pub use crate::program_utils::{get_core_asset_meta, check_if_in_whitelist};
@@ -69,11 +73,12 @@ pub fn mint_nft_core(_ctx: Context<MintNFTCore>, token_meta: TokenMeta) -> Resul
         // .invoke();
         .invoke_signed(signers)?;
 
-    // Emit NFT creation event
+    // Emit event
     emit!(NFTCreationEvent {
         name: token_meta.name.clone(),
         asset: _ctx.accounts.asset.key(),
-        signer: _ctx.accounts.signer.key(),
+        owner: _ctx.accounts.authority.key(),
+        update_authority: _ctx.accounts.authority.key()
     });
 
     Ok(())
@@ -123,11 +128,13 @@ pub fn update_properties_nft_core(_ctx: Context<UpdatePropertiesNFTCore>, token_
         // .invoke();
         .invoke_signed(signers)?;
 
-    // Emit NFT update event
-    emit!(NFTUpdateEvent {
+    // Emit event
+    emit!(NFTPropertiesUpdateEvent {
         name: token_meta.name.clone(),
         asset: _ctx.accounts.asset.key(),
-        signer: _ctx.accounts.signer.key(),
+        owner: _ctx.accounts.authority.key(),
+        update_authority: _ctx.accounts.authority.key(),
+        properties: attribute_list
     });
 
     Ok(())
@@ -170,6 +177,14 @@ pub fn transfer_nft_core(_ctx: Context<TransferNFTCore>, token_meta: TokenMeta) 
         .system_program(&_ctx.accounts.system_program.to_account_info())
         .invoke_signed(signers)?;     
 
+    // Emit event
+    emit!(NFTTransferEvent {
+        name: token_meta.name.clone(),
+        asset: _ctx.accounts.asset.key(),
+        owner: _ctx.accounts.new_owner.key(),
+        update_authority: _ctx.accounts.new_owner.key()
+    });
+
     Ok(())
 }
 
@@ -196,10 +211,19 @@ pub fn update_nft_core(_ctx: Context<UpdateNFTCore>, token_meta: TokenMeta) -> R
     let _=UpdateV1CpiBuilder::new(&_ctx.accounts.mpl_core_program.to_account_info())
         .asset(&_ctx.accounts.asset.to_account_info())
         .payer(&_ctx.accounts.payer.to_account_info())
-        .new_uri(token_meta.uri)
+        .new_uri(token_meta.uri.clone())
         .authority(Some(&_ctx.accounts.authority.to_account_info()))
         .system_program(&_ctx.accounts.system_program.to_account_info())
         .invoke_signed(signers)?;   
+
+    // Emit event
+    emit!(NFTUpdateEvent {
+        name: token_meta.name.clone(),
+        asset: _ctx.accounts.asset.key(),
+        owner: _ctx.accounts.authority.key(),
+        update_authority: _ctx.accounts.authority.key(),
+        uri: token_meta.uri.clone()
+    });
 
     Ok(())
 }
@@ -230,6 +254,14 @@ pub fn burn_nft_core(_ctx: Context<BurnNFTCore>, token_meta: TokenMeta) -> Resul
         .authority(Some(&_ctx.accounts.authority.to_account_info()))
         .invoke_signed(signers)?;   
 
+    // Emit event
+    emit!(NFTBurnEvent {
+        name: token_meta.name.clone(),
+        asset: _ctx.accounts.asset.key(),
+        owner: _ctx.accounts.authority.key(),
+        update_authority: _ctx.accounts.authority.key()
+    });
+    
     Ok(())
 }
 

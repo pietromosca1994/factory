@@ -4,7 +4,8 @@
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "metadata": "tsx ./metadata.ts",
-    "api": "tsx ./scripts/api.ts"
+    "api": "tsx ./scripts/api.ts",
+    "monitor": "tsx ./scripts/monitor.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",

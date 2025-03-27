@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::program_accounts::Whitelist;
 use crate::program_utils::check_if_in_whitelist;
+use crate::program_events::{RemovedUserFromWhitelist, AddedUserToWhitelist};
 
 pub fn add_to_whitelist(_ctx: Context<AddToWhitelist>, user: Pubkey) -> Result<()> {
     let whitelist = &mut _ctx.accounts.whitelist;
@@ -14,6 +15,11 @@ pub fn add_to_whitelist(_ctx: Context<AddToWhitelist>, user: Pubkey) -> Result<(
         whitelist.authorized_users.push(user);
     }
 
+    // Emit Event
+    emit!(AddedUserToWhitelist{
+        user: user
+    });
+
     Ok(())
 }
 
@@ -24,6 +30,11 @@ pub fn remove_from_whitelist(_ctx: Context<RemoveFromWhitelist>, user: Pubkey) -
     
     // Remove the user from the whitelist
     whitelist.authorized_users.retain(|&u| u != user);
+
+    // Emit Event
+    emit!(RemovedUserFromWhitelist{
+        user: user
+    });
 
     Ok(())
 }

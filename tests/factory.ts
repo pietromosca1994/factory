@@ -70,16 +70,16 @@ describe("factory", () => {
   const cluster=umi.rpc.getCluster()
 
   // set the payer 
-  const payer = Keypair.fromSecretKey(privateKeyArray); 
+  const signer = Keypair.fromSecretKey(privateKeyArray); 
   // const payer = umi.payer
-
+  
   // create battery unique ID
   const id = generateRandomString(10)
   tokenMeta.name=id
   
   it("Initializes the program", async () => {
     // airdrop funds
-    await airdrop(payer.publicKey, solanaNetwork, 5);
+    await airdrop(signer.publicKey, solanaNetwork, 5);
 
     // derive the tokenRegistry account as PDA with seeds ['token_registry']
     const [tokenRegistryPDA, tokenRegistryBump] = web3.PublicKey.findProgramAddressSync(
@@ -93,16 +93,30 @@ describe("factory", () => {
     await program.methods
     .init() // Call the function with the InitTokenParams struct
     .accounts({
-        tokenRegistry: tokenRegistryPDA
+        // tokenRegistry: tokenRegistryPDA
     })
+    .signers([signer])
     .rpc();
 
     // check that the token registry account has been created
-    const accountInfo = await provider.connection.getAccountInfo(tokenRegistryPDA);
-    assert(accountInfo.owner.equals(program.programId), `token_registry account owner: ${accountInfo.owner}\n program id: ${program.programId}`);
+    // const accountInfo = await provider.connection.getAccountInfo(tokenRegistryPDA);
+    // assert(accountInfo.owner.equals(program.programId), `token_registry account owner: ${accountInfo.owner}\n program id: ${program.programId}`);
+    const [whitelistPDA, assetBump] = await anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("whitelist")
+      ],
+      program.programId
+    );
+    
+    const whitelist = await deserializeWhitelist(provider.connection, whitelistPDA);
+    assert(
+      whitelist.authorized_users.some((key: PublicKey) => key.toString() === signer.publicKey.toString()), 
+      `❌ User ${signer.publicKey.toString()} not added to the whitelist`
+    );
+  
   });
 
-  it ("Whitelist is working", async () => {
+  it ("Whitelisting", async () => {
     // generate a third party
     const thirdParty1 = Keypair.generate();
     const thirdParty2 = Keypair.generate();
@@ -111,7 +125,7 @@ describe("factory", () => {
     const txSignature=await program.methods
                 .addToWhitelist(thirdParty1.publicKey)
                 .accounts({})
-                .signers([payer])
+                .signers([signer])
                 .rpc();
     await connection.confirmTransaction(txSignature, 'finalized');
 
@@ -143,7 +157,7 @@ describe("factory", () => {
     await program.methods
     .removeFromWhitelist(thirdParty1.publicKey)
     .accounts({})
-    .signers([payer])
+    .signers([signer])
     .rpc();
 
     assert(
@@ -169,10 +183,10 @@ describe("factory", () => {
     const txSignature=await program.methods
     .mintNftCore(tokenMeta)
     .accounts({
-        signer: payer.publicKey,
-        payer: payer.publicKey,
+        signer: signer.publicKey,
+        payer: signer.publicKey,
     })
-    .signers([payer])
+    .signers([signer])
     .rpc();
 
     console.log(`✅ Token ${tokenMeta.name} created and minted successfully!`);
@@ -220,10 +234,10 @@ describe("factory", () => {
 
     const txSignature=await program.methods.updatePropertiesNftCore(tokenMeta)
     .accounts({
-      signer: payer.publicKey,
-      payer: payer.publicKey,
+      signer: signer.publicKey,
+      payer: signer.publicKey,
     })
-    .signers([payer])
+    .signers([signer])
     .rpc();
 
     // run tests
@@ -250,7 +264,7 @@ describe("factory", () => {
       await program.methods.updatePropertiesNftCore(tokenMeta)
       .accounts({
         signer: thirdParty.publicKey, // in this case we simulate a malicious actor trying to update the token
-        payer: payer.publicKey,
+        payer: signer.publicKey,
       })
       .signers([thirdParty])
       .rpc();
@@ -270,10 +284,10 @@ describe("factory", () => {
     await program.methods
     .updateNftCore(tokenMeta)
     .accounts({
-        signer: payer.publicKey,
-        payer: payer.publicKey,
+        signer: signer.publicKey,
+        payer: signer.publicKey,
     })
-    .signers([payer])
+    .signers([signer])
     .rpc();
 
     // run tests
@@ -288,11 +302,11 @@ describe("factory", () => {
     await program.methods
     .transferNftCore(tokenMeta)
     .accounts({
-        signer: payer.publicKey,
-        payer: payer.publicKey,
+        signer: signer.publicKey,
+        payer: signer.publicKey,
         newOwner: thirdParty1.publicKey
     })
-    .signers([payer])
+    .signers([signer])
     .rpc();
 
     // run tests

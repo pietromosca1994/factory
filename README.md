@@ -19,14 +19,8 @@ cargo update
 ```
 
 ## Testing
-### Local Environment
-1. Start a [Local Solana Cluster](https://solana.com/developers/guides/getstarted/solana-test-validator) (ref: [Test the Program](https://solana.com/docs/programs/anchor)):  
-1.1 Start the cluster  
-``` bash 
-solana-test-validator
-```
-1.2
-Add addtional programs 
+### Run [Local Solana Cluster](https://solana.com/developers/guides/getstarted/solana-test-validator) (ref: [Test the Program](https://solana.com/docs/programs/anchor)):  
+1. Download addtional programs 
 ```bash
 solana program dump -u m metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./tests/metaplex_token_metadata_program.so
 solana program dump -u m TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA ./tests/spl_token_program.so
@@ -42,12 +36,15 @@ address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 program = "tests/metaplex_token_metadata_program.so"
 ```
 
-In a different prompt. Configs are stored in ```~/.config/solana/cli/config.yml```
+2. Configure the Solana client
 ``` bash 
 solana config set --url http://127.0.0.1:8899
 ```
-Run the local validator with the dowloaded programs programs
+Configs are stored in ```~/.config/solana/cli/config.yml```
+
+3. Run the local validator with the dowloaded programs programs
 ```bash 
+rm test-ledger &\
 solana-test-validator \
 --bpf-program metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./tests/metaplex_token_metadata_program.so \
 --bpf-program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA ./tests/spl_token_program.so \
@@ -57,26 +54,26 @@ solana-test-validator \
 --reset
 ```
 
-2. Deploy 
-- 2.1 Configure the Anchor Project for Devnet deployment in ```Anchor.toml```
+### Deploy the program on Local Solana Cluster
+1. Configure the Anchor Project for Devnet deployment in ```Anchor.toml```
 ```toml
 [clusters]
 localnet = "http://127.0.0.1:8899"
 ```
-- 2.2 Build the Anchor Program
+2. Build the Anchor Program
 ``` bash
 anchor build
 ```
-- 2.3 Deploy the program locally 
+3. Deploy the program locally 
 ``` bash
 anchor deploy --provider.cluster localnet
 ```
 
-3. Test
+### Test the program on Local Solana Cluster
 ``` bash 
 anchor test --skip-local-validator
 ```
-## Deployment
+## Deployment on Solana
 ### Devnet Deployment
 1. Configure the Anchor Project for Devnet deployment in ```Anchor.toml``` (ref [Deploy to Devnet](https://solana.com/docs/programs/anchor))
 ``` bash 

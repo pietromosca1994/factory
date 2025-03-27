@@ -44,7 +44,7 @@ pub struct Init<'info> {
         seeds = [b"whitelist"],
         bump,
         payer = payer,
-        space = 8 + 4 + 32 * 100 //TODO Adjust space depending on max users
+        space = 8 + 4 + 32 * 5 //TODO Adjust space depending on max users
     )]
     pub whitelist: Account<'info, Whitelist>,
     pub system_program: Program<'info, System>,

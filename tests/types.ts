@@ -6,10 +6,8 @@ export enum SolanaNetwork {
     Localnet = "http://127.0.0.1:8899",
 }
 
-export interface TokenConfigs {
-    solanaNetwork: string,
-    tokenStandard: string,
-    tokenMeta: NonFungibleTokenMeta // | ecc.
+export interface Configs {
+    solanaNetwork: string
 }
 
 export class Attribute {

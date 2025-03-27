@@ -135,6 +135,19 @@ export async function deserializeWhitelist(connection: Connection, whitelistPDA:
     return new Whitelist({ authorized_users });
   }
 
+  export async function get_program_authority(programId: PublicKey | string): Promise<PublicKey> {
+    // Ensure programId is a PublicKey
+    const programPublicKey = typeof programId === "string" ? new PublicKey(programId) : programId;
+
+    const [assetPDA, assetBump] = await PublicKey.findProgramAddressSync(
+        [
+        Buffer.from("authority"),
+        ],
+        programPublicKey
+    );
+
+    return assetPDA
+}
 
 export async function get_nft_core_pda(name: String, programId: PublicKey | string): Promise<PublicKey> {
     // Ensure programId is a PublicKey

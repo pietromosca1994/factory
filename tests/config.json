@@ -1,4 +1,4 @@
 {
-    "solanaNetwork": "localnet",
+    "solanaNetwork": "devnet",
     "tokenStandard": "non-fungible"
 }

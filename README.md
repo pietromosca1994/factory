@@ -1,4 +1,11 @@
-#
+# Factory Solana Program 
+## Addresses
+| Network  | Address                                                        |
+|----------|----------------------------------------------------------------|
+| Localnet | ```374sEAYBSbxqHpzn9rsgkd2ECW1HgtiNFThC8h8txjgp```                                                        |
+| Devnet   | ```374sEAYBSbxqHpzn9rsgkd2ECW1HgtiNFThC8h8txjgp```             |
+| Mainnet  | ``` ```                                                        |
+
 ## Introduction
 Sample Rust program for Solana based on [Anchor Framework](https://solana.com/docs/programs/anchor)
 Here some useful resources:
@@ -20,6 +27,17 @@ cargo update
 
 ## Testing
 ### Run [Local Solana Cluster](https://solana.com/developers/guides/getstarted/solana-test-validator) (ref: [Test the Program](https://solana.com/docs/programs/anchor)):  
+0. [Solana Configuration](https://solana.com/docs/intro/installation)
+Update the solana CLI cluster to localhost 
+```
+solana config set --url localhost
+```
+
+Check the Solana Config
+```
+solana config get
+```
+
 1. Download addtional programs 
 ```bash
 solana program dump -u m metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./tests/metaplex_token_metadata_program.so
@@ -44,7 +62,7 @@ Configs are stored in ```~/.config/solana/cli/config.yml```
 
 3. Run the local validator with the dowloaded programs programs
 ```bash 
-rm test-ledger &\
+rm -rf test-ledger &\
 solana-test-validator \
 --bpf-program metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./tests/metaplex_token_metadata_program.so \
 --bpf-program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA ./tests/spl_token_program.so \
@@ -70,9 +88,16 @@ anchor deploy --provider.cluster localnet
 ```
 
 ### Test the program on Local Solana Cluster
+By default, the Anchor.toml config file specifies the localnet cluster. When developing on localnet, anchor test will automatically:
+1. Start a local Solana validator
+2. Build and deploy your program to the local cluster
+3. Run the tests in the tests folder
+4. Stop the local Solana validator
+Using the ```--skip-local-validator``` flag will skip starting the local validator since it's already running.
 ``` bash 
 anchor test --skip-local-validator
 ```
+
 ## Deployment on Solana
 ### Devnet Deployment
 1. Configure the Anchor Project for Devnet deployment in ```Anchor.toml``` (ref [Deploy to Devnet](https://solana.com/docs/programs/anchor))

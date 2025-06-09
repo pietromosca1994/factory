@@ -8,11 +8,18 @@ skip-lint = false
 [programs.localnet]
 factory = "GGVMhhhYAUuioAw1npbv1NMFBuXs8icgGYQVfjoyEoup"
 
+[programs.devnet]
+factory = "GGVMhhhYAUuioAw1npbv1NMFBuXs8icgGYQVfjoyEoup"
+
+[programs.mainnet]
+factory = "GGVMhhhYAUuioAw1npbv1NMFBuXs8icgGYQVfjoyEoup"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+# cluster = "localnet"
+cluster="devnet"
 wallet = "~/.config/solana/id.json"
 
 [clusters]

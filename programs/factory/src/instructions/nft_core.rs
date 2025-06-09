@@ -1,4 +1,4 @@
-use anchor_lang::{context, prelude::*};
+use anchor_lang::prelude::*;
 use anchor_spl::{
     token_2022::{spl_token_2022},
 };
@@ -12,7 +12,7 @@ pub use crate::program_events::{NFTCreationEvent,
     NFTPropertiesUpdateEvent, 
     NFTTransferEvent,
     NFTBurnEvent};
-pub use crate::program_types::{TokenMeta, TokenInfo};
+pub use crate::program_types::{TokenMeta};
 pub use crate::program_accounts::{UpdateAuthorityAccount, Whitelist};
 pub use crate::program_utils::{get_core_asset_meta, check_if_in_whitelist};
 pub use crate::program_errors::ProgramError;

@@ -1,26 +1,51 @@
 {
-    "name": "batteryNFT Test4",
+    "name": "batteryNFT test001",
     "symbol": "BNFTX",
     "uri": "https://devnet.irys.xyz/DbPDkeTvm9DTJXxkLEFvHJWDAfu3FortEDHTvsy9sSQB",
-    "description": "BatteryNFT exaple description",
+    "description": "test",
     "attributes":[
-        {
-            "trait_type": "manufacturer",
-            "value": "LG"
-        },
-        {
-            "trait_type": "battery_cathegory",
-            "value": "Industrial"
-        }
+        {"trait_type": "Battery passport identifier", "value": "test"},
+        {"trait_type": "Battery identifier", "value": "test"},
+        {"trait_type": "Operator identifier and information ", "value": "test"},
+        {"trait_type": "Manufacturer identifier and information", "value": "test"},
+        {"trait_type": "Battery category", "value": "test"},
+        {"trait_type": "Battery mass [kg]", "value": "test"},
+        {"trait_type": "Battery status", "value": "test"},
+        {"trait_type": "Battery chemistry", "value": "test"},
+        {"trait_type": "Materials used in cathode, anode and electrolyte", "value": "test"},
+        {"trait_type": "Rated capacity [Ah]", "value": "test"},
+        {"trait_type": "Capacity fade [%]", "value": "test"},
+        {"trait_type": "Certified usable battery energy [kWh]", "value": "test"},
+        {"trait_type": "Minimum voltage [V]", "value": "test"},
+        {"trait_type": "Maximum voltage [V]", "value": "test"},
+        {"trait_type": "Nominal voltage [V]", "value": "test"},
+        {"trait_type": "Original power capability [W]", "value": "test"},
+        {"trait_type": "Power fade [%]", "value": "test"},
+        {"trait_type": "Maximum permitted battery power [W]", "value": "test"},
+        {"trait_type": "Ratio between nominal power and battery energy [W/Wh]", "value": "test"},
+        {"trait_type": "Expected lifetime in calendar years [years]", "value": "test"},
+        {"trait_type": "Expected lifetime: Number of chargedischarge cycles [-]", "value": "test"},
+        {"trait_type": "Cycle-life reference test", "value": "test"},
+        {"trait_type": "C-rate of relevant cycle-life test [A/Ah]", "value": "test"},
+        {"trait_type": "Capacity threshold for exhaustion [%]", "value": "test"},
+        {"trait_type": "Initial internal resistance of battery cell and pack (module recommended) [Ohm]", "value": "test"},
+        {"trait_type": "Internal resistance increase of pack (cell and module recommended) [Ohm]", "value": "test"},
+        {"trait_type": "Temperature range idle state, lower boundary [degC]", "value": "test"},
+        {"trait_type": "Temperature range idle state, upper boundary [degC]", "value": "test"}
     ],
     "properties":[
-        {
-            "key": "SOH [%]",
-            "value": "100"
-        },
-        {
-            "key": "Cycles [EFC]",
-            "value": "1000"
-        }
+        {"key": "001", "value": "test"},
+        {"key": "002", "value": "test"},
+        {"key": "003", "value": "test"},
+        {"key": "004", "value": "test"},
+        {"key": "005", "value": "test"},
+        {"key": "006", "value": "test"},
+        {"key": "007", "value": "test"},
+        {"key": "008", "value": "test"},
+        {"key": "009", "value": "test"},
+        {"key": "010", "value": "test"},
+        {"key": "011", "value": "test"},
+        {"key": "012", "value": "test"},
+        {"key": "013", "value": "test"}
     ]
 }

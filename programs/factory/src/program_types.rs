@@ -28,8 +28,3 @@ pub struct Property {
     pub key: String,
     pub value: String,
 }
-
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
-pub struct TransferTokenParams {
-    pub id: String,
-}

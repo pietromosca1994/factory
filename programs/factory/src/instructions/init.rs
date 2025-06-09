@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::program_accounts::{TokenRegistry, Whitelist, UpdateAuthorityAccount};
+use crate::program_accounts::{TokenRegistry, Whitelist};
 
 pub fn init(_ctx: Context<Init>) -> Result<()> {
     // to be checked if initialized 
@@ -28,23 +28,25 @@ pub struct Init<'info> {
         payer = payer,      // User funds the account
         space = 8 + 32,     // Account size
         seeds = [b"authority"], // PDA Seeds signer.key().as_ref()
-        bump
+        bump,
+        rent_exempt = enforce 
     )]
     pub authority:  UncheckedAccount<'info>, // Account<'info, UpdateAuthorityAccount>,
-    #[account(
-        init_if_needed,
-        payer = payer,
-        space = 8 + TokenRegistry::INIT_SPACE,
-        seeds = [b"token_registry"],
-        bump
-    )]
-    pub token_registry: Account<'info, TokenRegistry>,
+    // #[account(
+    //     init_if_needed,
+    //     payer = payer,
+    //     space = 8 + TokenRegistry::INIT_SPACE,
+    //     seeds = [b"token_registry"],
+    //     bump
+    // )]
+    // pub token_registry: Account<'info, TokenRegistry>,
     #[account(
         init_if_needed,
         seeds = [b"whitelist"],
         bump,
         payer = payer,
-        space = 8 + 4 + 32 * 5 //TODO Adjust space depending on max users
+        space = 8 + 4 + 32 * 5, //TODO Adjust space depending on max users
+        rent_exempt = enforce 
     )]
     pub whitelist: Account<'info, Whitelist>,
     pub system_program: Program<'info, System>,
